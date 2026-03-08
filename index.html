@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LoL Challenge Wheel</title>
+
+<style>
+body{
+background:#0f172a;
+color:white;
+text-align:center;
+font-family:Arial;
+margin-top:100px;
+}
+
+button{
+padding:15px 40px;
+font-size:20px;
+background:#22c55e;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+#result{
+margin-top:40px;
+font-size:30px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🎡 LoL Challenge Wheel</h1>
+
+<button onclick="spin()">Çarkı Çevir</button>
+
+<div id="result"></div>
+
+<script>
+
+const challenges = [
+"Flash Yasak",
+"Sadece Jungle Camp",
+"İlk Item Random",
+"Sadece Roam",
+"ADC ile Mid Oyna",
+"Sadece Kule Altı Farm",
+"Pink Ward Spam",
+"Boots Yasak"
+]
+
+function spin(){
+let random = Math.floor(Math.random()*challenges.length)
+document.getElementById("result").innerText = challenges[random]
+}
+
+</script>
+
+</body>
+</html>
