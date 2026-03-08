@@ -1,36 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<title>LoL Wheel</title>
+<meta charset="UTF-8">
+<title>LoL Chaos Wheel</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Winwheel.js/2.8.0/Winwheel.min.js"></script>
 
 <style>
 
 body{
-background:#0f172a;
-color:white;
+margin:0;
 font-family:Arial;
+color:white;
+background:black;
+overflow-x:hidden;
+}
+
+.background{
+position:fixed;
+width:100%;
+height:100%;
+background-image:url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/MissFortune_0.jpg");
+background-size:cover;
+background-position:center;
+filter:brightness(0.35);
+z-index:-1;
+}
+
+.container{
 text-align:center;
-margin-top:100px;
+margin-top:40px;
 }
 
 h1{
 font-size:50px;
+letter-spacing:3px;
+margin-bottom:40px;
+}
+
+.wheels{
+display:flex;
+justify-content:center;
+gap:40px;
+flex-wrap:wrap;
+}
+
+canvas{
+background:rgba(0,0,0,0.4);
+border-radius:50%;
 }
 
 button{
-padding:15px 40px;
+
+margin-top:40px;
+padding:18px 60px;
 font-size:22px;
-background:#22c55e;
+
+background:#c89b3c;
+color:black;
+
 border:none;
-border-radius:10px;
+border-radius:8px;
+
 cursor:pointer;
+
+font-weight:bold;
+transition:0.2s;
+
 }
 
-#result{
+button:hover{
+
+transform:scale(1.05);
+background:#e4b653;
+
+}
+
+.results{
+
 margin-top:40px;
-font-size:35px;
+font-size:28px;
+
+}
+
+.resultBox{
+
+margin:10px;
+
 }
 
 </style>
@@ -39,34 +97,171 @@ font-size:35px;
 
 <body>
 
-<h1>🎡 LoL Champion Wheel</h1>
+<div class="background"></div>
 
-<button onclick="spin()">SPIN</button>
+<div class="container">
 
-<div id="result"></div>
+<h1>LoL Chaos Wheel</h1>
+
+<div class="wheels">
+
+<canvas id="championWheel" width="320" height="320"></canvas>
+
+<canvas id="roleWheel" width="320" height="320"></canvas>
+
+<canvas id="challengeWheel" width="320" height="320"></canvas>
+
+</div>
+
+<button onclick="spinAll()">SPIN ALL</button>
+
+<div class="results">
+
+<div class="resultBox" id="championResult"></div>
+<div class="resultBox" id="roleResult"></div>
+<div class="resultBox" id="challengeResult"></div>
+
+</div>
+
+</div>
 
 <script>
 
-const champions = [
-"Ahri",
-"Yasuo",
-"Zed",
-"Katarina",
-"Lux",
-"Miss Fortune"
-]
+/* CHAMPION WHEEL */
 
-function spin(){
+let championWheel = new Winwheel({
 
-let random = Math.floor(Math.random()*champions.length)
+canvasId:'championWheel',
 
-document.getElementById("result").innerText =
-"Champion: " + champions[random]
+numSegments:10,
+
+outerRadius:150,
+
+textFontSize:14,
+
+segments:[
+
+{'fillStyle':'#1e293b','text':'Ahri'},
+{'fillStyle':'#334155','text':'Yasuo'},
+{'fillStyle':'#475569','text':'Zed'},
+{'fillStyle':'#1e293b','text':'Katarina'},
+{'fillStyle':'#334155','text':'Lux'},
+{'fillStyle':'#475569','text':'Miss Fortune'},
+{'fillStyle':'#1e293b','text':'Jinx'},
+{'fillStyle':'#334155','text':'Lee Sin'},
+{'fillStyle':'#475569','text':'Viego'},
+{'fillStyle':'#1e293b','text':'Akali'}
+
+],
+
+animation:{
+type:'spinToStop',
+duration:5,
+spins:8,
+callbackFinished:championResult
+}
+
+});
+
+/* ROLE WHEEL */
+
+let roleWheel = new Winwheel({
+
+canvasId:'roleWheel',
+
+numSegments:5,
+
+outerRadius:150,
+
+textFontSize:16,
+
+segments:[
+
+{'fillStyle':'#1e293b','text':'Top'},
+{'fillStyle':'#334155','text':'Jungle'},
+{'fillStyle':'#475569','text':'Mid'},
+{'fillStyle':'#1e293b','text':'ADC'},
+{'fillStyle':'#334155','text':'Support'}
+
+],
+
+animation:{
+type:'spinToStop',
+duration:5,
+spins:8,
+callbackFinished:roleResult
+}
+
+});
+
+/* CHALLENGE WHEEL */
+
+let challengeWheel = new Winwheel({
+
+canvasId:'challengeWheel',
+
+numSegments:8,
+
+outerRadius:150,
+
+textFontSize:12,
+
+segments:[
+
+{'fillStyle':'#1e293b','text':'No Flash'},
+{'fillStyle':'#334155','text':'First Item Random'},
+{'fillStyle':'#475569','text':'Only Roam'},
+{'fillStyle':'#1e293b','text':'No Boots'},
+{'fillStyle':'#334155','text':'Ward Spam'},
+{'fillStyle':'#475569','text':'Only Jungle Camps'},
+{'fillStyle':'#1e293b','text':'No Ultimate'},
+{'fillStyle':'#334155','text':'No Recall'}
+
+],
+
+animation:{
+type:'spinToStop',
+duration:5,
+spins:8,
+callbackFinished:challengeResult
+}
+
+});
+
+/* SPIN */
+
+function spinAll(){
+
+championWheel.startAnimation();
+roleWheel.startAnimation();
+challengeWheel.startAnimation();
+
+}
+
+/* RESULTS */
+
+function championResult(segment){
+
+document.getElementById("championResult").innerText =
+"Champion: " + segment.text
+
+}
+
+function roleResult(segment){
+
+document.getElementById("roleResult").innerText =
+"Role: " + segment.text
+
+}
+
+function challengeResult(segment){
+
+document.getElementById("challengeResult").innerText =
+"Challenge: " + segment.text
 
 }
 
 </script>
 
 </body>
-
 </html>
