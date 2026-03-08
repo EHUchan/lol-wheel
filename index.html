@@ -1,206 +1,463 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="tr">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoL Champion Wheel</title>
+  <style>
+    :root {
+      --lol-gold: #c8aa6e;
+      --lol-blue: #0ac8b9;
+      --panel: rgba(10, 20, 40, 0.88);
+      --danger: #f14c4c;
+      --success: #39d98a;
+    }
 
-<meta charset="UTF-8">
-<title>LoL Champion Wheel</title>
+    * { box-sizing: border-box; }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Winwheel.js/2.8.0/Winwheel.min.js"></script>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #f0e6d2;
+      background: #010a13;
+    }
 
-<style>
+    .background {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(1, 10, 19, 0.3), rgba(1, 10, 19, 0.9)),
+        url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/MissFortune_0.jpg") center/cover;
+      filter: saturate(1.08) brightness(0.5);
+      z-index: -2;
+      animation: bgFloat 16s ease-in-out infinite alternate;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-color:white;
-background:black;
-overflow:hidden;
-}
+    @keyframes bgFloat {
+      from { transform: scale(1.03) translateY(-7px); }
+      to { transform: scale(1.07) translateY(9px); }
+    }
 
-/* animated background */
+    .app {
+      width: min(1180px, 95vw);
+      margin: 22px auto;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
 
-.background{
-position:fixed;
-width:100%;
-height:100%;
-background-image:url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/MissFortune_0.jpg");
-background-size:cover;
-background-position:center;
-filter:brightness(0.25);
-z-index:-1;
-}
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(200, 170, 110, 0.4);
+      border-radius: 14px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+      padding: 18px;
+    }
 
-/* container */
+    h1 {
+      margin: 0;
+      color: var(--lol-gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: clamp(1.7rem, 3vw, 2.5rem);
+      text-align: center;
+    }
 
-.container{
-text-align:center;
-margin-top:30px;
-}
+    .subtitle {
+      margin: 8px 0 18px;
+      text-align: center;
+      color: #d7dee9;
+    }
 
-h1{
-font-size:60px;
-letter-spacing:3px;
-margin-bottom:30px;
-}
+    .wheel-wrap {
+      margin: 0 auto;
+      width: min(72vw, 620px);
+      height: min(72vw, 620px);
+      max-width: 620px;
+      max-height: 620px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
 
-/* wheel */
+    .pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 34px solid var(--lol-gold);
+      z-index: 4;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.65));
+    }
 
-canvas{
-background:rgba(0,0,0,0.4);
-border-radius:50%;
-}
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 7px solid rgba(200, 170, 110, 0.9);
+      box-shadow: inset 0 0 30px rgba(10, 200, 185, 0.22), 0 9px 20px rgba(0, 0, 0, 0.55);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(4, 17, 33, 0.95) 0 26%, transparent 27%),
+        repeating-conic-gradient(from 0deg, #17313a 0deg 6deg, #0f2430 6deg 12deg);
+      transition: transform 6s cubic-bezier(0.18, 0.88, 0.14, 1);
+      position: relative;
+      overflow: hidden;
+    }
 
-/* button */
+    .wheel::after {
+      content: "";
+      position: absolute;
+      inset: 50%;
+      width: 122px;
+      height: 122px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, #1a3a46 0 35%, #0d172c 70%);
+      border: 2px solid rgba(200, 170, 110, 0.75);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.45);
+    }
 
-button{
+    .wheel-center-text {
+      position: absolute;
+      z-index: 5;
+      text-align: center;
+      font-weight: 700;
+      color: #e6e0d2;
+      pointer-events: none;
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
 
-margin-top:40px;
-padding:20px 80px;
-font-size:26px;
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
 
-background:#c89b3c;
-color:black;
+    button, select {
+      border-radius: 8px;
+      border: 1px solid rgba(200, 170, 110, 0.55);
+      font-size: 0.94rem;
+      font-weight: 700;
+      padding: 11px 14px;
+    }
 
-border:none;
-border-radius:8px;
+    button {
+      background: var(--lol-gold);
+      color: #09101f;
+      cursor: pointer;
+    }
 
-cursor:pointer;
+    button:hover:not(:disabled) { filter: brightness(1.06); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    #winBtn { background: var(--success); }
+    #loseBtn { background: var(--danger); color: #fff; }
 
-font-weight:bold;
-transition:0.2s;
+    .status-panel { display: grid; gap: 12px; align-content: start; }
+    .status-panel h2 { margin: 4px 0; color: var(--lol-gold); }
 
-}
+    .card {
+      background: rgba(10, 20, 40, 0.8);
+      border: 1px solid rgba(200, 170, 110, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+    }
 
-button:hover{
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-transform:scale(1.05);
-background:#e4b653;
+    .metric {
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(8, 51, 74, 0.3);
+      font-weight: 700;
+    }
 
-}
+    .highlight { color: var(--lol-blue); font-size: 1.25rem; }
 
-#result{
+    #resultChampion {
+      margin-top: 6px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 1.5em;
+    }
 
-margin-top:40px;
-font-size:40px;
+    #championPreview {
+      margin-top: 8px;
+      width: 100%;
+      min-height: 138px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(200, 170, 110, 0.35);
+      background: rgba(0, 0, 0, 0.4);
+    }
 
-}
+    .name-list {
+      max-height: 170px;
+      overflow: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
 
-</style>
+    .name-chip {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(14, 43, 62, 0.7);
+      border: 1px solid rgba(200, 170, 110, 0.3);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
 
+    .footnote { font-size: 0.85rem; color: #c6cfdd; line-height: 1.4; }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .wheel-wrap { width: min(86vw, 560px); height: min(86vw, 560px); }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="background"></div>
 
-<div class="background"></div>
+  <main class="app">
+    <section class="panel">
+      <h1>League of Legends Çark</h1>
+      <p class="subtitle">İsimler karışmasın diye çark sadeleştirildi; tüm isimler aşağıdaki listede net şekilde gösteriliyor.</p>
 
-<div class="container">
+      <div class="wheel-wrap">
+        <div class="pointer" aria-hidden="true"></div>
+        <div class="wheel" id="wheel"></div>
+        <div class="wheel-center-text" id="wheelCenterInfo">Yükleniyor...</div>
+      </div>
 
-<h1>Champion Wheel</h1>
+      <div class="controls">
+        <button id="spinBtn">ÇARKI ÇEVİR</button>
+        <button id="winBtn" disabled>WIN</button>
+        <button id="loseBtn" disabled>LOSE</button>
+      </div>
+    </section>
 
-<canvas id="wheelCanvas" width="700" height="700"></canvas>
+    <aside class="panel status-panel">
+      <h2>Oyun Durumu</h2>
+      <div class="card">
+        <div>Seçilen Şampiyon</div>
+        <div id="resultChampion">Henüz seçilmedi.</div>
+        <img id="championPreview" alt="Şampiyon görseli" />
+      </div>
 
-<br>
+      <div class="metrics">
+        <div class="metric">Win Streak<br /><span class="highlight" id="streakCount">0</span></div>
+        <div class="metric">Diriltme Hakkı<br /><span class="highlight" id="reviveCount">0</span></div>
+        <div class="metric">Aktif Şampiyon<br /><span class="highlight" id="activeCount">0</span></div>
+        <div class="metric">Elenen Şampiyon<br /><span class="highlight" id="eliminatedCount">0</span></div>
+      </div>
 
-<button onclick="spin()">SPIN</button>
+      <div class="card">
+        <label for="reviveSelect">Diriltilecek şampiyon:</label>
+        <div class="controls" style="justify-content:flex-start; margin-top:8px;">
+          <select id="reviveSelect"></select>
+          <button id="reviveBtn" disabled>Dirilt</button>
+        </div>
+      </div>
 
-<div id="result"></div>
+      <div class="card">
+        <strong>Aktif şampiyon listesi</strong>
+        <div class="name-list" id="activeChampionList"></div>
+      </div>
 
-<audio id="voice"></audio>
+      <p class="footnote">Kural: Lose ile şampiyon elenir, Win ile havuzda kalır. Her 5 ardışık galibiyette 1 diriltme hakkı kazanırsın.</p>
+    </aside>
+  </main>
 
-</div>
+  <audio id="voice" preload="auto"></audio>
 
-<script>
+  <script>
+    const ddragonVersion = "13.24.1";
 
-let champions = []
+    let activeChampions = [];
+    let eliminatedChampions = [];
+    let selectedChampion = null;
+    let isSpinning = false;
+    let currentRotation = 0;
+    let winStreak = 0;
+    let reviveCredits = 0;
 
-/* RIOT DATA DRAGON CHAMPIONS */
+    const wheelEl = document.getElementById("wheel");
+    const wheelCenterInfoEl = document.getElementById("wheelCenterInfo");
+    const resultChampionEl = document.getElementById("resultChampion");
+    const previewEl = document.getElementById("championPreview");
+    const spinBtn = document.getElementById("spinBtn");
+    const winBtn = document.getElementById("winBtn");
+    const loseBtn = document.getElementById("loseBtn");
+    const reviveBtn = document.getElementById("reviveBtn");
+    const reviveSelect = document.getElementById("reviveSelect");
+    const streakCountEl = document.getElementById("streakCount");
+    const reviveCountEl = document.getElementById("reviveCount");
+    const activeCountEl = document.getElementById("activeCount");
+    const eliminatedCountEl = document.getElementById("eliminatedCount");
+    const activeChampionListEl = document.getElementById("activeChampionList");
+    const voice = document.getElementById("voice");
 
-fetch("https://ddragon.leagueoflegends.com/cdn/13.24.1/data/en_US/champion.json")
-.then(res => res.json())
-.then(data => {
+    const createChampion = (raw) => ({
+      id: raw.id,
+      key: raw.key,
+      name: raw.name,
+      title: raw.title,
+      splash: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${raw.id}_0.jpg`,
+      voiceOptions: [
+        `https://raw.githubusercontent.com/CommunityDragon/Raw/master/plugins/rcp-be-lol-game-data/global/default/v1/champions/${raw.key}/skins/base/vo/en_us/attack1.ogg`,
+        `https://raw.githubusercontent.com/CommunityDragon/Raw/master/plugins/rcp-be-lol-game-data/global/default/v1/champions/${raw.key}/skins/base/vo/en_us/taunt1.ogg`,
+        `https://raw.githubusercontent.com/CommunityDragon/Raw/master/plugins/rcp-be-lol-game-data/global/default/v1/champions/${raw.key}/skins/base/vo/en_us/laugh1.ogg`
+      ]
+    });
 
-let champData = data.data
+    async function init() {
+      try {
+        const response = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/tr_TR/champion.json`);
+        const payload = await response.json();
+        activeChampions = Object.values(payload.data).map(createChampion);
+        refreshUI();
+      } catch (error) {
+        resultChampionEl.textContent = "Şampiyon verileri yüklenemedi.";
+        console.error(error);
+      }
+    }
 
-for(let key in champData){
+    function refreshUI() {
+      streakCountEl.textContent = String(winStreak);
+      reviveCountEl.textContent = String(reviveCredits);
+      activeCountEl.textContent = String(activeChampions.length);
+      eliminatedCountEl.textContent = String(eliminatedChampions.length);
+      wheelCenterInfoEl.innerHTML = `Toplam<br>${activeChampions.length}`;
 
-champions.push(champData[key].name)
+      activeChampionListEl.innerHTML = "";
+      activeChampions.forEach((champion) => {
+        const chip = document.createElement("span");
+        chip.className = "name-chip";
+        chip.textContent = champion.name;
+        chip.title = champion.title;
+        activeChampionListEl.appendChild(chip);
+      });
 
-}
+      reviveSelect.innerHTML = "";
+      if (eliminatedChampions.length === 0) {
+        const emptyOption = document.createElement("option");
+        emptyOption.textContent = "Elenen şampiyon yok";
+        reviveSelect.appendChild(emptyOption);
+      } else {
+        eliminatedChampions.forEach((champion) => {
+          const option = document.createElement("option");
+          option.value = champion.id;
+          option.textContent = champion.name;
+          reviveSelect.appendChild(option);
+        });
+      }
 
-createWheel()
+      const canRevive = reviveCredits > 0 && eliminatedChampions.length > 0;
+      reviveBtn.disabled = !canRevive;
+      reviveSelect.disabled = !canRevive;
 
-})
+      const canMarkResult = Boolean(selectedChampion) && !isSpinning;
+      winBtn.disabled = !canMarkResult;
+      loseBtn.disabled = !canMarkResult;
+      spinBtn.disabled = isSpinning || activeChampions.length === 0;
+    }
 
-let wheel
+    function chooseByRotation(finalRotationDeg) {
+      const segmentAngle = 360 / activeChampions.length;
+      const normalized = ((finalRotationDeg % 360) + 360) % 360;
+      const pointerAngle = (360 - normalized + 0.0001) % 360;
+      const index = Math.floor(pointerAngle / segmentAngle) % activeChampions.length;
+      return activeChampions[index];
+    }
 
-function createWheel(){
+    function spinWheel() {
+      if (isSpinning || activeChampions.length === 0) return;
 
-let segments = champions.map(name => {
+      isSpinning = true;
+      selectedChampion = null;
+      resultChampionEl.textContent = "Çark dönüyor...";
+      previewEl.removeAttribute("src");
+      refreshUI();
 
-return {
+      const extraTurns = Math.floor(Math.random() * 4) + 6;
+      const randomOffset = Math.random() * 360;
+      currentRotation += extraTurns * 360 + randomOffset;
+      wheelEl.style.transform = `rotate(${currentRotation}deg)`;
 
-fillStyle: Math.random() > 0.5 ? "#1e293b" : "#334155",
-text: name
+      setTimeout(() => {
+        selectedChampion = chooseByRotation(currentRotation);
+        isSpinning = false;
+        resultChampionEl.textContent = `${selectedChampion.name} (${selectedChampion.title})`;
+        previewEl.src = selectedChampion.splash;
+        playVoice(selectedChampion);
+        refreshUI();
+      }, 6100);
+    }
 
-}
+    function registerWin() {
+      if (!selectedChampion || isSpinning) return;
 
-})
+      winStreak += 1;
+      if (winStreak % 5 === 0) reviveCredits += 1;
 
-wheel = new Winwheel({
+      resultChampionEl.textContent = `WIN ✅ ${selectedChampion.name} havuzda kaldı.`;
+      selectedChampion = null;
+      refreshUI();
+    }
 
-canvasId:'wheelCanvas',
+    function registerLose() {
+      if (!selectedChampion || isSpinning) return;
 
-numSegments: segments.length,
+      const removedId = selectedChampion.id;
+      eliminatedChampions.push(selectedChampion);
+      activeChampions = activeChampions.filter((champion) => champion.id !== removedId);
+      winStreak = 0;
 
-outerRadius:320,
+      resultChampionEl.textContent = `LOSE ❌ ${selectedChampion.name} elendi.`;
+      selectedChampion = null;
+      refreshUI();
+    }
 
-textFontSize:10,
+    function reviveChampion() {
+      if (reviveCredits < 1 || eliminatedChampions.length === 0) return;
 
-segments:segments,
+      const reviveId = reviveSelect.value;
+      const idx = eliminatedChampions.findIndex((champion) => champion.id === reviveId);
+      if (idx === -1) return;
 
-animation:{
-type:'spinToStop',
-duration:7,
-spins:10,
-callbackFinished:championResult
-}
+      const [champion] = eliminatedChampions.splice(idx, 1);
+      activeChampions.push(champion);
+      reviveCredits -= 1;
 
-})
+      resultChampionEl.textContent = `🔁 ${champion.name} yeniden çarka eklendi.`;
+      refreshUI();
+    }
 
-}
+    function playVoice(champion) {
+      const source = champion.voiceOptions[Math.floor(Math.random() * champion.voiceOptions.length)];
+      voice.src = source;
+      voice.play().catch(() => {});
+    }
 
-function spin(){
+    spinBtn.addEventListener("click", spinWheel);
+    winBtn.addEventListener("click", registerWin);
+    loseBtn.addEventListener("click", registerLose);
+    reviveBtn.addEventListener("click", reviveChampion);
 
-wheel.startAnimation()
-
-}
-
-function championResult(segment){
-
-document.getElementById("result").innerText =
-"Selected Champion: " + segment.text
-
-playVoice(segment.text)
-
-}
-
-/* champion voice */
-
-function playVoice(name){
-
-let voice = document.getElementById("voice")
-
-let file = name.replace(" ","")
-
-voice.src =
-"https://raw.githubusercontent.com/CommunityDragon/Raw/master/plugins/rcp-be-lol-game-data/global/default/v1/champions/" + file + "/skins/base/vo/en_us/attack1.ogg"
-
-voice.play().catch(()=>{})
-
-}
-
-</script>
-
+    init();
+  </script>
 </body>
 </html>
