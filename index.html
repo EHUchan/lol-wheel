@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>LoL Chaos Wheel</title>
+<title>LoL Champion Wheel</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Winwheel.js/2.8.0/Winwheel.min.js"></script>
 
@@ -15,8 +15,10 @@ margin:0;
 font-family:Arial;
 color:white;
 background:black;
-overflow-x:hidden;
+overflow:hidden;
 }
+
+/* animated background */
 
 .background{
 position:fixed;
@@ -25,38 +27,37 @@ height:100%;
 background-image:url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/MissFortune_0.jpg");
 background-size:cover;
 background-position:center;
-filter:brightness(0.35);
+filter:brightness(0.25);
 z-index:-1;
 }
 
+/* container */
+
 .container{
 text-align:center;
-margin-top:40px;
+margin-top:30px;
 }
 
 h1{
-font-size:50px;
+font-size:60px;
 letter-spacing:3px;
-margin-bottom:40px;
+margin-bottom:30px;
 }
 
-.wheels{
-display:flex;
-justify-content:center;
-gap:40px;
-flex-wrap:wrap;
-}
+/* wheel */
 
 canvas{
 background:rgba(0,0,0,0.4);
 border-radius:50%;
 }
 
+/* button */
+
 button{
 
 margin-top:40px;
-padding:18px 60px;
-font-size:22px;
+padding:20px 80px;
+font-size:26px;
 
 background:#c89b3c;
 color:black;
@@ -78,16 +79,10 @@ background:#e4b653;
 
 }
 
-.results{
+#result{
 
 margin-top:40px;
-font-size:28px;
-
-}
-
-.resultBox{
-
-margin:10px;
+font-size:40px;
 
 }
 
@@ -101,163 +96,107 @@ margin:10px;
 
 <div class="container">
 
-<h1>LoL Chaos Wheel</h1>
+<h1>Champion Wheel</h1>
 
-<div class="wheels">
+<canvas id="wheelCanvas" width="700" height="700"></canvas>
 
-<canvas id="championWheel" width="320" height="320"></canvas>
+<br>
 
-<canvas id="roleWheel" width="320" height="320"></canvas>
+<button onclick="spin()">SPIN</button>
 
-<canvas id="challengeWheel" width="320" height="320"></canvas>
+<div id="result"></div>
 
-</div>
-
-<button onclick="spinAll()">SPIN ALL</button>
-
-<div class="results">
-
-<div class="resultBox" id="championResult"></div>
-<div class="resultBox" id="roleResult"></div>
-<div class="resultBox" id="challengeResult"></div>
-
-</div>
+<audio id="voice"></audio>
 
 </div>
 
 <script>
 
-/* CHAMPION WHEEL */
+let champions = []
 
-let championWheel = new Winwheel({
+/* RIOT DATA DRAGON CHAMPIONS */
 
-canvasId:'championWheel',
+fetch("https://ddragon.leagueoflegends.com/cdn/13.24.1/data/en_US/champion.json")
+.then(res => res.json())
+.then(data => {
 
-numSegments:10,
+let champData = data.data
 
-outerRadius:150,
+for(let key in champData){
 
-textFontSize:14,
+champions.push(champData[key].name)
 
-segments:[
+}
 
-{'fillStyle':'#1e293b','text':'Ahri'},
-{'fillStyle':'#334155','text':'Yasuo'},
-{'fillStyle':'#475569','text':'Zed'},
-{'fillStyle':'#1e293b','text':'Katarina'},
-{'fillStyle':'#334155','text':'Lux'},
-{'fillStyle':'#475569','text':'Miss Fortune'},
-{'fillStyle':'#1e293b','text':'Jinx'},
-{'fillStyle':'#334155','text':'Lee Sin'},
-{'fillStyle':'#475569','text':'Viego'},
-{'fillStyle':'#1e293b','text':'Akali'}
+createWheel()
 
-],
+})
+
+let wheel
+
+function createWheel(){
+
+let segments = champions.map(name => {
+
+return {
+
+fillStyle: Math.random() > 0.5 ? "#1e293b" : "#334155",
+text: name
+
+}
+
+})
+
+wheel = new Winwheel({
+
+canvasId:'wheelCanvas',
+
+numSegments: segments.length,
+
+outerRadius:320,
+
+textFontSize:10,
+
+segments:segments,
 
 animation:{
 type:'spinToStop',
-duration:5,
-spins:8,
+duration:7,
+spins:10,
 callbackFinished:championResult
 }
 
-});
-
-/* ROLE WHEEL */
-
-let roleWheel = new Winwheel({
-
-canvasId:'roleWheel',
-
-numSegments:5,
-
-outerRadius:150,
-
-textFontSize:16,
-
-segments:[
-
-{'fillStyle':'#1e293b','text':'Top'},
-{'fillStyle':'#334155','text':'Jungle'},
-{'fillStyle':'#475569','text':'Mid'},
-{'fillStyle':'#1e293b','text':'ADC'},
-{'fillStyle':'#334155','text':'Support'}
-
-],
-
-animation:{
-type:'spinToStop',
-duration:5,
-spins:8,
-callbackFinished:roleResult
-}
-
-});
-
-/* CHALLENGE WHEEL */
-
-let challengeWheel = new Winwheel({
-
-canvasId:'challengeWheel',
-
-numSegments:8,
-
-outerRadius:150,
-
-textFontSize:12,
-
-segments:[
-
-{'fillStyle':'#1e293b','text':'No Flash'},
-{'fillStyle':'#334155','text':'First Item Random'},
-{'fillStyle':'#475569','text':'Only Roam'},
-{'fillStyle':'#1e293b','text':'No Boots'},
-{'fillStyle':'#334155','text':'Ward Spam'},
-{'fillStyle':'#475569','text':'Only Jungle Camps'},
-{'fillStyle':'#1e293b','text':'No Ultimate'},
-{'fillStyle':'#334155','text':'No Recall'}
-
-],
-
-animation:{
-type:'spinToStop',
-duration:5,
-spins:8,
-callbackFinished:challengeResult
-}
-
-});
-
-/* SPIN */
-
-function spinAll(){
-
-championWheel.startAnimation();
-roleWheel.startAnimation();
-challengeWheel.startAnimation();
+})
 
 }
 
-/* RESULTS */
+function spin(){
+
+wheel.startAnimation()
+
+}
 
 function championResult(segment){
 
-document.getElementById("championResult").innerText =
-"Champion: " + segment.text
+document.getElementById("result").innerText =
+"Selected Champion: " + segment.text
+
+playVoice(segment.text)
 
 }
 
-function roleResult(segment){
+/* champion voice */
 
-document.getElementById("roleResult").innerText =
-"Role: " + segment.text
+function playVoice(name){
 
-}
+let voice = document.getElementById("voice")
 
-function challengeResult(segment){
+let file = name.replace(" ","")
 
-document.getElementById("challengeResult").innerText =
-"Challenge: " + segment.text
+voice.src =
+"https://raw.githubusercontent.com/CommunityDragon/Raw/master/plugins/rcp-be-lol-game-data/global/default/v1/champions/" + file + "/skins/base/vo/en_us/attack1.ogg"
+
+voice.play().catch(()=>{})
 
 }
 
